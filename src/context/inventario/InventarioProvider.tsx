@@ -1,4 +1,4 @@
-import { FC, useEffect, useReducer } from 'react';
+import { FC, useCallback, useEffect, useReducer } from 'react';
 import { InventarioContext, InventarioReducer } from '../';
 import { inventarioAPI } from '../../api';
 import { Marca } from '../../interfaces';
@@ -20,18 +20,20 @@ export const InventarioProvider:FC<Props> = ({ children }) => {
         dispatch({ type: "[Inventario] - loadBrands", payload: brands });
     }
 
-    const fetchBrands = async () => {
+    const fetchBrands = useCallback(    
+        async () => {
         try {
             const { data } = await inventarioAPI.get('marca');
             loadBrands(data.marcas);
         } catch (error) {
 
         }
-    }
+    },[]);
 
     useEffect(() => {
-        fetchBrands();
-    }, [])
+        fetchBrands()
+    }, [fetchBrands])
+    
     
     return (
         <InventarioContext.Provider value={{...state, fetchBrands}} >

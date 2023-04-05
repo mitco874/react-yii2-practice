@@ -37,12 +37,13 @@ export const UpdateProductModal: FC<Props> = ({ isOpen, onClose, currentProduct,
                 background: 'white',
                 padding: '20px',
                 width: '500px',
-                height: '500px',
+                height: '600px',
                 borderRadius: '10px'
             }} >
                 <ProductForm 
                     onSubmit={onSubmitForm} 
-                    defaultProductId={currentProduct?.id} 
+                    defaultProduct={currentProduct} 
+                    submitButtonText='Update'
                 />
             </Box>
         </Modal>

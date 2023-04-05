@@ -1,13 +1,14 @@
 import { Button, MenuItem, TextField } from "@mui/material";
-import { useFormik } from "formik";
 import { FC, useEffect, useState } from "react";
+import { useForm } from 'react-hook-form';
 import { inventarioAPI } from "../api";
-import { Marca, Seccion } from "../interfaces";
-import { validationSchema } from "../utils";
+import { Marca, Product, Seccion } from "../interfaces";
+import { fieldValidations } from "../utils";
 
 interface Props {
-    defaultProductId?: number
+    defaultProduct?: any
     onSubmit: (values: any) => Promise<void>;
+    submitButtonText?: string;
 }
 
 interface FormData {
@@ -19,25 +20,21 @@ interface FormData {
     stock: string;
 }
 
-const initialValues: FormData = {
-    nombre: '',
-    descripcion: '',
-    precio: '',
-    marca_id: '',
-    seccion_id: '',
-    stock: ''
-}
+export const ProductForm: FC<Props> = ({ defaultProduct, onSubmit, submitButtonText = 'Submit' }) => {
 
-export const ProductForm: FC<Props> = ({ defaultProductId, onSubmit }) => {
+    const [initialValues, setInitialValues] = useState ( defaultProduct? defaultProduct : {
+        nombre: '',
+        descripcion: '',
+        precio: '',
+        marca_id: '',
+        seccion_id: '',
+        stock: ''
+    })
 
     const [brands, setBrands] = useState<Marca[] | []>([]);
     const [sections, setSections] = useState<Seccion[] | []>([]);
 
-    const formik = useFormik({
-        initialValues,
-        validationSchema: validationSchema.createProductValidationSchema,
-        onSubmit
-    });
+    const { register, handleSubmit, formState: { errors }, setValue, getValues, reset } = useForm<FormData>({defaultValues:initialValues});
 
     useEffect(() => {
         const fetchBrands = async () => {
@@ -57,74 +54,94 @@ export const ProductForm: FC<Props> = ({ defaultProductId, onSubmit }) => {
 
             }
         }
-
         fetchBrands();
         fetchSections();
     }, [])
 
-    useEffect(() => {
-        const fetchInitialValues = async () => {
-            if (defaultProductId) {
-                try {
-                    const { data } = await inventarioAPI.get(`producto/${defaultProductId}`);
-                    formik.setValues(data.producto);
-                } catch (error) {
 
-                }
-            }
-        }
+    // useEffect(() => {
+    //     const fetchInitialValues = async () => {
+    //         if (defaultProductId) {
+                
+    //             try {
+                    
+    //                 const { data } = await inventarioAPI.get(`producto/${defaultProductId}`);
+    //                 console.log(data.producto)
 
-        fetchInitialValues();
-    }, [defaultProductId])
+    //                 //setInitialValues({...initialValues, nombre: data.producto.nombre  })
+
+
+    //                 reset(data.producto)
+    //             } catch (error) {
+
+    //             }
+    //         }
+    //     }
+    //     fetchInitialValues();
+    // }, [defaultProductId])
 
 
     return (
-        <form onSubmit={formik.handleSubmit} noValidate
+        <form onSubmit={handleSubmit(onSubmit)} noValidate
             style={{
                 display: 'flex',
                 flexDirection: 'column'
             }}
-        >
+        >s
 
             <TextField
                 label="Name"
-                name="nombre"
                 variant="filled"
-                value={formik.values.nombre}
-                onChange={formik.handleChange}
-                error={formik.touched.nombre && Boolean(formik.errors.nombre)}
-                helperText={formik.touched.nombre && formik.errors.nombre}
-            />
-            <TextField
-                label="Description"
-                name='descripcion'
-                variant="filled"
-                value={formik.values.descripcion}
-                onChange={formik.handleChange}
-                error={formik.touched.descripcion && Boolean(formik.errors.descripcion)}
-                helperText={formik.touched.descripcion && formik.errors.descripcion}
-            />
-            <TextField
-                label="Price"
-                name='precio'
-                variant="filled"
-                type="number"
-                value={formik.values.precio}
-                onChange={formik.handleChange}
-                error={formik.touched.precio && Boolean(formik.errors.precio)}
-                helperText={formik.touched.precio && formik.errors.precio}
+                sx={{marginBottom:'20px'}}
+                // value={getValues("nombre")}
+                {...register("nombre",
+                {
+                    required: "This field is required",
+                    minLength: { value: 3, message: 'min 3 characters' },
+                    maxLength: { value: 40, message: 'max 40 characters' }
+                }
+                )}
+                error={!!errors.nombre}
+                helperText={errors.nombre?.message}
             />
 
             <TextField
-                label="Brand id"
-                name='marca_id'
+                label="Description"
+                variant="filled"
+                sx={{marginBottom:'20px'}}
+                // value={getValues("descripcion")}
+                {...register("descripcion")}
+            />
+
+            <TextField
+                label="Price"
                 variant="filled"
                 type="number"
+                sx={{marginBottom:'20px'}}
+                {...register("precio",
+                    {
+                        valueAsNumber: true,
+                        required: "Numeric value is required",
+                    }
+                )}
+                error={!!errors.precio}
+                helperText={errors.precio?.message}
+            />
+
+            <TextField
+                label="Brand"
+                variant="filled"
+                type="number"
+                sx={{marginBottom:'20px'}}
+                defaultValue={getValues("marca_id")}
                 select
-                value={formik.values.marca_id}
-                onChange={formik.handleChange}
-                error={formik.touched.marca_id && Boolean(formik.errors.marca_id)}
-                helperText={formik.touched.marca_id && formik.errors.marca_id}
+                {...register("marca_id",                     
+                    {
+                        required: "Select a brand"
+                    }
+                )}
+                error={!!errors.marca_id}
+                helperText={errors.marca_id?.message}
             >
                 {
                     brands.map(
@@ -135,15 +152,19 @@ export const ProductForm: FC<Props> = ({ defaultProductId, onSubmit }) => {
 
 
             <TextField
-                label="Section id"
-                name='seccion_id'
+                label="Section"
                 variant="filled"
                 type="number"
+                sx={{marginBottom:'20px'}}
+                defaultValue={getValues("seccion_id")}
                 select
-                value={formik.values.seccion_id}
-                onChange={formik.handleChange}
-                error={formik.touched.seccion_id && Boolean(formik.errors.seccion_id)}
-                helperText={formik.touched.seccion_id && formik.errors.seccion_id}
+                {...register("seccion_id",                     
+                {
+                    required: "Select a section"
+                }
+                )}
+                error={!!errors.seccion_id}
+                helperText={errors.seccion_id?.message}
             >
                 {
                     sections.map((section) => (
@@ -156,15 +177,31 @@ export const ProductForm: FC<Props> = ({ defaultProductId, onSubmit }) => {
 
             <TextField
                 label="Stock"
-                name='stock'
                 variant="filled"
                 type="number"
-                value={formik.values.stock}
-                onChange={formik.handleChange}
-                error={formik.touched.stock && Boolean(formik.errors.stock)}
-                helperText={formik.touched.stock && formik.errors.stock}
+                // value={getValues("stock")}
+                sx={{marginBottom:'20px'}}
+                {...register("stock",
+                {
+                    valueAsNumber: true,
+                    required: "Numeric value is required",
+                    validate: fieldValidations.isInteger
+                }
+                )}
+                error={!!errors.stock}
+                helperText={errors.stock?.message}
             />
-            <Button type="submit"> Create </Button>
+            <Button 
+                type="submit" 
+                variant="contained" 
+                sx={{ 
+                    marginTop: '40px',
+                    display: 'flex',
+                    alignSelf: 'center',
+                    width: '200px',
+                     
+                }}
+            > {submitButtonText} </Button>
         </form>
     )
 }

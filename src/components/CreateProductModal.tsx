@@ -34,10 +34,13 @@ export const CreateProductModal: FC<Props> = ({ isOpen, onClose, onReloadProduct
                 background: 'white',
                 padding: '20px',
                 width: '500px',
-                height: '500px',
+                height: '600px',
                 borderRadius: '10px'
             }} >
-                <ProductForm onSubmit={onSubmitForm} />
+                <ProductForm 
+                    onSubmit={onSubmitForm} 
+                    submitButtonText='Create'
+                />
 
             </Box>
         </Modal>

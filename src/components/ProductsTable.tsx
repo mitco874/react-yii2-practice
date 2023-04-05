@@ -1,5 +1,5 @@
 import { Box, Button, MenuItem, Paper, Table, TableContainer, Typography } from "@mui/material";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { inventarioAPI } from "../api";
 import { InventarioContext } from "../context";
 import { Product } from "../interfaces";
@@ -34,7 +34,7 @@ export const ProductsTable = () => {
   const [isUpdateProductModalOpen, setIsUpdateProductModalOpen] = useState<boolean>(false);
   const [currentEditedProduct, setCurrentEditedProduct] = useState<Product | undefined>();
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setIsLoadingProducts(true);
       const { data } = await inventarioAPI
@@ -44,7 +44,7 @@ export const ProductsTable = () => {
     } catch (error) {
       setErrorLoadingProducts(true);
     }
-  }
+  },[productsData.page,productsData.limit,productsData.stockOrder,productsData.nameOrder,productsData.brandId])
 
   const onChangePage = (e: any) => {
     setProductsData({ ...productsData, page: (e.target.innerText - 1) })
@@ -67,13 +67,14 @@ export const ProductsTable = () => {
   }
 
   const onOpenEditProductModal = (product: Product) => {
+    //peticion
     setCurrentEditedProduct(product);
     setIsUpdateProductModalOpen(true);
   }
 
   useEffect(() => {
     fetchProducts();
-  }, [productsData.page, productsData.limit, productsData.nameOrder, productsData.stockOrder, productsData.brandId])
+  }, [fetchProducts])
 
 
   if (errorLoadingProducts) {
